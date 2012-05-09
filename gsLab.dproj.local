@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2012/03/30 15:59:07.142.dfm,C:\Users\coury\Documents\Projets Borland Studio\Unit1.dfm=C:\Users\coury\Dropbox\common\code\gsProto\main.dfm</Transaction>
+    <Transaction>2012/03/30 15:59:07.142.pas,C:\Users\coury\Documents\Projets Borland Studio\Unit1.pas=C:\Users\coury\Dropbox\common\code\gsProto\main.pas</Transaction>
+    <Transaction>2012/03/30 15:59:17.815.bdsproj,C:\Users\coury\Documents\Projets Borland Studio\Project1.bdsproj=C:\Users\coury\Dropbox\common\code\gsProto\gsProto.bdsproj</Transaction>
+    <Transaction>2012/05/05 22:52:54.000.204,=C:\Users\clem\Dropbox\common\code\gsProto\Unit1.pas</Transaction>
+    <Transaction>2012/05/05 22:57:50.000.006,C:\Users\clem\Dropbox\common\code\gsProto\Unit1.pas=C:\Users\clem\Dropbox\common\code\gsProto\GSWebServer.pas</Transaction>
+    <Transaction>2012/05/09 22:09:37.000.941,C:\Users\clem\Dropbox\common\code\gsProto\gsProto.dproj=C:\Users\clem\Dropbox\common\code\gsLab\gsLab.dproj</Transaction>
+  </Transactions>
+</BorlandProject>
