@@ -62,6 +62,7 @@ type
     lstPattern: TListView;
     btnSave: TButton;
     btnLoad: TButton;
+    btnAdd: TButton;
     procedure Button1Click(Sender: TObject);
     procedure btnProcessClick(Sender: TObject);
     procedure vstPatternGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -75,17 +76,22 @@ type
       Column: TColumnIndex; var Allowed: Boolean);
     procedure FormDestroy(Sender: TObject);
     procedure testTrick(Sender: TObject);
-    procedure btnLoadClick(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
+    procedure btnAddClick(Sender: TObject);
+    procedure btnLoadClick(Sender: TObject);
+    procedure lstPatternClick(Sender: TObject);
   private
     { Déclarations privées }
     nbCol: integer;
     fGsWebServer: TGsWebServer;
-    fGsDatabase: TSQLRest;
+    fGsDatabase: TSQLRestServerDB;
     fGsModel: TSQLModel;
+    fPatternList: TStringList;
     function generateUrl():string;
+    procedure SetpatternList(const Value: TStringList);
   public
     { Déclarations publiques }
+    property patternList: TStringList read FpatternList write SetpatternList;
     function getPeriod(aSs: string): double;
     function lengthSs(aSs: string): integer;
     procedure initVst(aPattern: TSQLGsPattern);
@@ -98,11 +104,35 @@ var
 
 implementation
 
+uses SQLite3i18n;
+
 {$R *.dfm}
 
-procedure TForm1.btnLoadClick(Sender: TObject);
+procedure TForm1.btnAddClick(Sender: TObject);
 begin
+  patternList.addObject(aPattern.aSs, aPattern);
   lstPattern.AddItem(aPattern.aSs, aPattern);
+  aPattern := TSQLGsPattern.create;
+end;
+
+procedure TForm1.btnLoadClick(Sender: TObject);
+var
+  aPat, aNewPat: TSQLGsPattern;
+begin
+  lstPattern.Clear;
+  patternList.Clear;
+  aPat := TSQLGsPattern.create;
+//  fGsDatabase.Retrieve('aSs = "53"', aPat);
+  aPat := TSQLGsPattern.CreateAndFillPrepare(fGsDatabase, 'id > 0',[],['19']);
+  while aPat.FillOne do
+  begin
+    aNewPat := TSQLGsPattern.Create();
+    aPat.assign(aNewPat);
+    aNewPat.ValuesEditor := vlePos;
+    aNewPat.load(fGsDatabase);
+    patternList.AddObject(aNewPat.aSs, aNewPat);
+    lstPattern.AddItem(aNewPat.aSs, aNewPat);
+  end;
 end;
 
 procedure TForm1.btnProcessClick(Sender: TObject);
@@ -117,8 +147,15 @@ begin
 end;
 
 procedure TForm1.btnSaveClick(Sender: TObject);
+var
+  iPat: integer;
+  tPat: TSQLGsPattern;
 begin
-  fGsDatabase.Add(aPattern, true);
+  for iPat := 0 to patternList.count-1 do
+  begin
+    tPat := TSQLGsPattern(patternList.Objects[iPat]);
+    tpat.save(fGsDatabase);
+  end;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
@@ -150,14 +187,18 @@ begin
   aPattern := TSQLGsPattern.create;
   aPattern.ValuesEditor := vlePos;
   fGsWebServer := TGsWebServer.Create;
-  fGsModel := TSQLModel.Create([TSQLGsPattern]);
+  fGsModel := TSQLModel.Create([TSQLGsPattern, TSQLGsSs]);
   fGsDatabase := TSQLRestServerDB.Create(fGsModel, ChangeFileExt(paramstr(0),'.db3'));
   TSQLRestServerDB(fGsDatabase).CreateMissingTables(0);
-
+  fPatternList := TStringList.Create;
+  fPatternList.sorted := false;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
+  fPatternList.Free;
+  fGsDatabase.Free;
+  fGsModel.Free;
   fGsWebServer.Free;
 end;
 
@@ -210,13 +251,26 @@ begin
   initVst(aPattern);
 end;
 
+procedure TForm1.lstPatternClick(Sender: TObject);
+var
+  aPat: TSQLGsPattern;
+begin
+  aPat := TSQLGsPattern(lstPattern.ItemFocused.Data);
+  initVst(aPat);
+end;
+
+procedure TForm1.SetpatternList(const Value: TStringList);
+begin
+  FpatternList := Value;
+end;
+
 function TForm1.generateUrl(): string;
 var
   params, paramsHands: string;
   url: string;
 begin
   url := 'http://localhost:888/jlab';
-  if TSs(aPattern.listSs.Objects[0]).thrHand = 'l' then
+  if TSQLGsSs(aPattern.listSs.Objects[0]).thrHand = 'l' then
     params := '?pattern=L' + aPattern.aSs
   else
     params := '?pattern=R' + aPattern.aSs;
@@ -248,7 +302,7 @@ procedure TForm1.vstPatternGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 var
   pPattern: PDataPattern;
-  aSs: TSs;
+  aSs: TSQLGsSs;
 begin
   pPattern:= vstPattern.GetNodeData(Node);
   if Column = 0 then
@@ -267,7 +321,7 @@ begin
   end
   else if (Column > 0) and (Column <= pPattern.aPattern.lengthSs-1+1)  then
   begin
-    aSs := TSs(pPattern.aPattern.listSs.Objects[Column-1]);
+    aSs := TSQLGsSs(pPattern.aPattern.listSs.Objects[Column-1]);
     if aSs <> nil then
     begin
       case Node.Index of
@@ -316,13 +370,13 @@ function TVstPatternEditLink.EndEdit: Boolean;
 var
   data: PDataPattern;
   iLine: integer;
-  aSs: TSs;
+  aSs: TSQLGsSs;
 begin
   Result := true;
   data := FTree.GetNodeData(FNode);
   iLine := FNode.index;
 
-  aSs := TSs(data.aPattern.listSs.objects[FColumn-1]);
+  aSs := TSQLGsSs(data.aPattern.listSs.objects[FColumn-1]);
   case iLine of
     1 : aSs.thrHand := TComboBox(FEdit).text;
     2 : aSs.catHand := TComboBox(FEdit).text;
@@ -343,7 +397,7 @@ function TVstPatternEditLink.PrepareEdit(Tree: TBaseVirtualTree;
 var
   data: PDataPattern;
   i, iLine: integer;
-  aSs: TSs;
+  aSs: TSQLGsSs;
 begin
   Result := True;
   FTree := Tree as TVirtualStringTree;
@@ -355,7 +409,7 @@ begin
   data := FTree.GetNodeData(Node);
   iLine := Node.index;
 
-  aSs := TSs(data.aPattern.listSs.objects[FColumn-1]);
+  aSs := TSQLGsSs(data.aPattern.listSs.objects[FColumn-1]);
   FEdit := TComboBox.Create(nil);
   with FEdit as TComboBox do
   begin

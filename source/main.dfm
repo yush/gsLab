@@ -219,10 +219,11 @@ object Form1: TForm1
             end>
           TabOrder = 0
           ViewStyle = vsReport
+          OnClick = lstPatternClick
         end
         object btnSave: TButton
           Left = 118
-          Top = 408
+          Top = 399
           Width = 75
           Height = 25
           Caption = 'Save'
@@ -230,13 +231,22 @@ object Form1: TForm1
           OnClick = btnSaveClick
         end
         object btnLoad: TButton
-          Left = 22
-          Top = 408
+          Left = 118
+          Top = 368
           Width = 75
           Height = 25
           Caption = 'Load'
           TabOrder = 2
           OnClick = btnLoadClick
+        end
+        object btnAdd: TButton
+          Left = 118
+          Top = 430
+          Width = 75
+          Height = 25
+          Caption = 'Add'
+          TabOrder = 3
+          OnClick = btnAddClick
         end
       end
     end

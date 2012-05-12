@@ -1,18 +1,11 @@
 program gsLab;
 
 uses
-(*
-  Windows,
-  Messages,
-  Variants,
-  Classes,
-  Graphics,
-  Controls,
-    *)
   Forms,
   SysUtils,
   main in 'source\main.pas' {Form1},
-  GSWebServer in 'source\GSWebServer.pas';
+  GSWebServer in 'source\GSWebServer.pas',
+  GsData in 'source\GsData.pas';
 
 {$R *.res}
 
