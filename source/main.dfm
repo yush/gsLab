@@ -227,6 +227,7 @@ object Form1: TForm1
           Width = 75
           Height = 25
           Caption = 'Save'
+          Enabled = False
           TabOrder = 1
           OnClick = btnSaveClick
         end

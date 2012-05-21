@@ -84,7 +84,7 @@ type
     { Déclarations privées }
     nbCol: integer;
     fGsWebServer: TGsWebServer;
-    fGsDatabase: TSQLRestServerDB;
+    fRestClientDB: TSQLRestClientDB;
     fGsModel: TSQLModel;
     fPatternList: TStringList;
     function generateUrl():string;
@@ -112,24 +112,28 @@ procedure TForm1.btnAddClick(Sender: TObject);
 begin
   patternList.addObject(aPattern.aSs, aPattern);
   lstPattern.AddItem(aPattern.aSs, aPattern);
+  aPattern.save(fRestClientDB.Server);
   aPattern := TSQLGsPattern.create;
 end;
 
 procedure TForm1.btnLoadClick(Sender: TObject);
 var
   aPat, aNewPat: TSQLGsPattern;
+  aJsonTable: TSQLTableJSON;
+  i,aID: integer;
 begin
   lstPattern.Clear;
   patternList.Clear;
-  aPat := TSQLGsPattern.create;
-//  fGsDatabase.Retrieve('aSs = "53"', aPat);
-  aPat := TSQLGsPattern.CreateAndFillPrepare(fGsDatabase, 'id > 0',[],['19']);
-  while aPat.FillOne do
+  aJsonTable := fRestClientDB.List([TSQLGsPattern]);
+  aPat := TSQLGsPattern.Create();
+  for i := 1 to aJsonTable.RowCount do
   begin
+    aId := aJsonTable.GetAsInteger(i, 0);
     aNewPat := TSQLGsPattern.Create();
+    fRestClientDB.Retrieve(aId, aPat);
     aPat.assign(aNewPat);
     aNewPat.ValuesEditor := vlePos;
-    aNewPat.load(fGsDatabase);
+    aNewPat.load(fRestClientDB.Server);
     patternList.AddObject(aNewPat.aSs, aNewPat);
     lstPattern.AddItem(aNewPat.aSs, aNewPat);
   end;
@@ -154,7 +158,7 @@ begin
   for iPat := 0 to patternList.count-1 do
   begin
     tPat := TSQLGsPattern(patternList.Objects[iPat]);
-    tpat.save(fGsDatabase);
+    tpat.save(fRestClientDB.Server);
   end;
 end;
 
@@ -188,8 +192,8 @@ begin
   aPattern.ValuesEditor := vlePos;
   fGsWebServer := TGsWebServer.Create;
   fGsModel := TSQLModel.Create([TSQLGsPattern, TSQLGsSs]);
-  fGsDatabase := TSQLRestServerDB.Create(fGsModel, ChangeFileExt(paramstr(0),'.db3'));
-  TSQLRestServerDB(fGsDatabase).CreateMissingTables(0);
+  fRestClientDB := TSQLRestClientDB.Create(fGsModel, fGsModel, ChangeFileExt(paramstr(0),'.db3'), TSQLRestServerDB);
+  fRestClientDB.Server.CreateMissingTables(0);
   fPatternList := TStringList.Create;
   fPatternList.sorted := false;
 end;
@@ -197,8 +201,8 @@ end;
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
   fPatternList.Free;
-  fGsDatabase.Free;
-  fGsModel.Free;
+  fRestClientDB.Free;
+//  fGsModel.Free;
   fGsWebServer.Free;
 end;
 
@@ -255,8 +259,8 @@ procedure TForm1.lstPatternClick(Sender: TObject);
 var
   aPat: TSQLGsPattern;
 begin
-  aPat := TSQLGsPattern(lstPattern.ItemFocused.Data);
-  initVst(aPat);
+  aPattern := TSQLGsPattern(lstPattern.ItemFocused.Data);
+  initVst(aPattern);
 end;
 
 procedure TForm1.SetpatternList(const Value: TStringList);
