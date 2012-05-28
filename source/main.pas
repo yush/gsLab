@@ -1,5 +1,7 @@
 unit main;
 
+// revoir thrXCoord. Incompatible entre cascade et moulins
+
 interface
 
 uses
@@ -11,7 +13,7 @@ uses
 const
   colWidth = 60;
   edtHeight = 50;
-  NUM_INFO = 7; //ssTime, thrHand, catHand, thrPos, catPos, thrModifier, catModifier
+  NUM_INFO = 8; //ssTime, thrHand, catHand, thrPos, catPos, thrModifier, catModifier, osu
 
 type
 
@@ -52,17 +54,19 @@ type
     PageControl1: TPageControl;
     TabSheet1: TTabSheet;
     vstPattern: TVirtualStringTree;
-    WebBrowser1: TWebBrowser;
     memoUrl: TMemo;
     testCascade: TButton;
     testCascadeInverse: TButton;
     testHalfShower: TButton;
     Panel1: TPanel;
-    Panel2: TPanel;
+    WebBrowser1: TWebBrowser;
     lstPattern: TListView;
-    btnSave: TButton;
     btnLoad: TButton;
     btnAdd: TButton;
+    btnSave: TButton;
+    Label3: TLabel;
+    edtNom: TEdit;
+    btnDelete: TButton;
     procedure Button1Click(Sender: TObject);
     procedure btnProcessClick(Sender: TObject);
     procedure vstPatternGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -80,6 +84,7 @@ type
     procedure btnAddClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure lstPatternClick(Sender: TObject);
+    procedure btnDeleteClick(Sender: TObject);
   private
     { Déclarations privées }
     nbCol: integer;
@@ -96,6 +101,7 @@ type
     function lengthSs(aSs: string): integer;
     procedure initVst(aPattern: TSQLGsPattern);
     procedure loadPattern(aPattern: TSQLGsPattern);
+    procedure fillPatternList;
   end;
 
 var
@@ -109,11 +115,26 @@ uses SQLite3i18n;
 {$R *.dfm}
 
 procedure TForm1.btnAddClick(Sender: TObject);
+var
+  idx: integer;
 begin
+  aPattern.name := S2U(edtNom.Text);
   patternList.addObject(aPattern.aSs, aPattern);
   lstPattern.AddItem(aPattern.aSs, aPattern);
   aPattern.save(fRestClientDB.Server);
   aPattern := TSQLGsPattern.create;
+end;
+
+procedure TForm1.btnDeleteClick(Sender: TObject);
+var
+  aPat: TSQLGsPattern;
+begin
+  aPat := TSQLGsPattern(lstPattern.ItemFocused.Data);
+  if aPat <> nil then
+  begin
+    aPat.delete(fRestClientDB.Server);
+    lstPattern.ItemFocused.Delete;
+  end;
 end;
 
 procedure TForm1.btnLoadClick(Sender: TObject);
@@ -122,7 +143,6 @@ var
   aJsonTable: TSQLTableJSON;
   i,aID: integer;
 begin
-  lstPattern.Clear;
   patternList.Clear;
   aJsonTable := fRestClientDB.List([TSQLGsPattern]);
   aPat := TSQLGsPattern.Create();
@@ -135,8 +155,9 @@ begin
     aNewPat.ValuesEditor := vlePos;
     aNewPat.load(fRestClientDB.Server);
     patternList.AddObject(aNewPat.aSs, aNewPat);
-    lstPattern.AddItem(aNewPat.aSs, aNewPat);
   end;
+
+  fillPatternList;
 end;
 
 procedure TForm1.btnProcessClick(Sender: TObject);
@@ -155,10 +176,20 @@ var
   iPat: integer;
   tPat: TSQLGsPattern;
 begin
+(*
   for iPat := 0 to patternList.count-1 do
   begin
     tPat := TSQLGsPattern(patternList.Objects[iPat]);
     tpat.save(fRestClientDB.Server);
+  end;
+  *)
+  if lstPattern.ItemFocused <> nil then
+  begin
+    aPattern := TSQLGsPattern(lstPattern.ItemFocused.Data);
+    aPattern.name := S2U(edtNom.Text);
+    if aPattern.ID <> 0 then
+      aPattern.update(fRestClientDB.Server);
+    loadPattern(aPattern);
   end;
 end;
 
@@ -169,10 +200,21 @@ begin
   begin
     nbCol := lengthSs(edtSs.text)*StrToInt(edtRepetition.Text);
   end;
-
-  aPattern.aSs := edtSs.text;
-  aPattern.init;
+  aPattern.init(edtSs.text);
   initVst(aPattern);
+end;
+
+procedure TForm1.fillPatternList;
+var
+  i: integer;
+  aPat: TSQLGsPattern;
+begin
+  lstPattern.Clear;
+  for i := 0 to patternList.Count-1 do
+  begin
+    aPat := TSQLGsPattern(patternList.Objects[i]);
+    lstPattern.AddItem(aPat.aSs, aPat);
+  end;
 end;
 
 procedure TForm1.testTrick(Sender: TObject);
@@ -251,6 +293,7 @@ end;
 procedure TForm1.loadPattern(aPattern: TSQLGsPattern);
 begin
   edtSs.Text := aPattern.aSs;
+  edtNom.Text := U2S(aPattern.name);
   edtRepetition.Text := '1';
   initVst(aPattern);
 end;
@@ -259,8 +302,11 @@ procedure TForm1.lstPatternClick(Sender: TObject);
 var
   aPat: TSQLGsPattern;
 begin
-  aPattern := TSQLGsPattern(lstPattern.ItemFocused.Data);
-  initVst(aPattern);
+  if lstPattern.ItemFocused <> nil then
+  begin
+    aPattern := TSQLGsPattern(lstPattern.ItemFocused.Data);
+    loadPattern(aPattern);
+  end;
 end;
 
 procedure TForm1.SetpatternList(const Value: TStringList);
@@ -320,6 +366,7 @@ begin
         4: CellText := 'catPos';
         5: CellText := 'thrModifier';
         6: CellText := 'catModifier';
+        7: CellText := 'osu';
       end;
     end;
   end
@@ -336,6 +383,7 @@ begin
         4: CellText := aSs.catPos;
         5: CellText := aSs.thrModfier;
         6: CellText := aSs.catModifier;
+        7: CellText := aSs.osu;
       end;
     end;
   end;
@@ -386,6 +434,9 @@ begin
     2 : aSs.catHand := TComboBox(FEdit).text;
     3 : aSs.thrPos := TComboBox(FEdit).text;
     4 : aSs.catPos := TComboBox(FEdit).text;
+    5 : aSs.thrModfier := TComboBox(FEdit).text;
+    6 : aSs.catModifier := TComboBox(FEdit).text;
+    7 : aSs.osu := TComboBox(FEdit).text;
   end;
   FEdit.Hide;
   FTree.SetFocus;
@@ -402,6 +453,7 @@ var
   data: PDataPattern;
   i, iLine: integer;
   aSs: TSQLGsSs;
+  keyVal: string;
 begin
   Result := True;
   FTree := Tree as TVirtualStringTree;
@@ -425,29 +477,43 @@ begin
     OnKeyDown := EditKeyDown;
     Color     := clInfoBk;
     case iLine of
-      // Pos
-      1, 2: begin
-        if aPattern.ValuesEditor.Strings.Count > 0 then
-        begin
-          for i := 1 to aPattern.ValuesEditor.Strings.Count do
+      // thrPos and catPos
+      1, 2, 3, 4: begin
+          for i := 1 to Form1.vlePos.Strings.Count do
           begin
-            AddItem(aPattern.ValuesEditor.keys[I], nil);
+            keyVal := Form1.vlePos.keys[I];
+            if (keyVal = 'r') or (keyVal = 'c') or (keyVal = 'l') then
+              AddItem(keyVal, nil);
           end;
-          Text := aPattern.ValuesEditor.keys[1];
-        end;
+          Text := Form1.vlePos.keys[1];
       end;
-      // Modifier
+
+      // thrModifier, catModifier
       5, 6: begin
         AddItem('inside', nil);
         AddItem('outside', nil);
         AddItem('column', nil);
       end;
+
+      // osu
+      7: begin
+          for i := 1 to Form1.vlePos.Strings.Count do
+          begin
+            keyVal := Form1.vlePos.keys[I];
+            if (keyVal = 'o') or (keyVal = 's') or (keyVal = 'u') then
+              AddItem(keyVal, nil);
+          end;
+
+      end;
     end;
     case iLine of
        1 : text := aSs.thrPos;
        2 : text := aSs.catPos;
+       3 : text := aSs.thrPos;
+       4 : text := aSs.catPos;
        5 : text := aSs.thrModfier;
        6 : text := aSs.catModifier;
+       7 : text := aSs.osu;
     end
   end
 

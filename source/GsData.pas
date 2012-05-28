@@ -16,18 +16,21 @@ type
     FaSs: string;
     FlistSs: TRawUTF8List;
     Fkey: integer;
+    Fname: RawUTF8;
     procedure SetaSs(const Value: string);
     procedure SetlistSs(const Value: TRawUTF8List);
     procedure SetValuesEditor(const Value: TValueListEditor);
     procedure Setkey(const Value: integer);
+    procedure Setname(const Value: RawUTF8);
   published
     property aSs: string read FaSs write SetaSs;
+    property name: RawUTF8 read Fname write Setname;
     property listSs: TRawUTF8List read FlistSs write SetlistSs;
   public
     property ValuesEditor: TValueListEditor read FValuesEditor write SetValuesEditor;
     constructor create();
     destructor destroy();
-    procedure init();
+    procedure init(strSs: string);
     function lengthSs: integer;
     function getHandsParams: string;
     function getSsInNextNumBeatsFor(tRefSs: TSQLGsSs; numBeat: integer): TSQLGsSs;
@@ -39,6 +42,8 @@ type
     procedure testHalfShower;
     function save(aDb: TSQLRestServerDB): boolean;
     function load(aDb: TSQLRestServerDB): boolean;
+    function delete(aDb: TSQLRestServerDB): boolean;
+    function update(aDb: TSQLRestServerDB): boolean;
     function loadAll(aDb: TSQLRestServerDB): boolean;
     procedure assign(dest: TSQLGsPattern);
   end;
@@ -54,6 +59,7 @@ type
     Fhash: string;
     FcatModifier: string;
     FthrModfier: string;
+    Fosu: string;
     procedure SetcatPos(const Value: string);
     procedure SetparentPattern(const Value: TSQLGsPattern);
     procedure SetssBase(const Value: integer);
@@ -62,11 +68,14 @@ type
     procedure SetcatPosCoord(const Value: string);
     procedure SetthrPosCoord(const Value: string);
     function getCatPosCoord: double;
-    function getThrPosCoord: double;
+    function getThrXCoord: double;
+    function getCatXCoord: double;
+    function getThrYCoord: double;
     procedure SetthrHand(const Value: string);
     procedure SetcatHand(const Value: string);
     procedure SetcatModifier(const Value: string);
     procedure SetthrModfier(const Value: string);
+    procedure Setosu(const Value: string);
   published
     property ssBase: integer read FssBase write SetssBase;
     property thrHand: string read FthrHand write SetthrHand;
@@ -75,11 +84,12 @@ type
     property catModifier: string read FcatModifier write SetcatModifier;
     property thrPos: string read FthrPos write SetthrPos;
     property catPos: string read FcatPos write SetcatPos;
+    property osu: string read Fosu write Setosu;
   public
     property parentPattern: TSQLGsPattern read FparentPattern write SetparentPattern;
     property hash: string read Fhash write Sethash;
-    property thrPosCoord: double read getThrPosCoord;
-    property catPosCoord: double read getCatPosCoord;
+    property thrPosCoord: double read getThrXCoord;
+    property catPosCoord: double read getCatXCoord;
     function getNext: TSQLGsSs;
     procedure assign(dest: TSQLGsSs);
     constructor Create(aPattern: TSQLGsPattern);
@@ -104,7 +114,9 @@ procedure TSQLGsPattern.assign(dest: TSQLGsPattern);
 var
   i: integer;
 begin
+  dest.ID := ID;
   dest.FaSs := FaSs;
+  dest.Fname := Fname;
   for i := 0 to listSs.Count-1 do
     dest.listSs.Add(listSs.Strings[i]);
 end;
@@ -115,6 +127,7 @@ var
   aGsSs:TSQLGsSs;
 begin
   aSs := '';
+  name := '';
   for i := 0 to listSs.Count-1 do
   begin
     aGsSs := TSQLGsSs(listSs.Objects[i]);
@@ -140,6 +153,7 @@ var
   i: integer;
   aSsThr, aSsCat: TSQLGsSs;
   strThr, strCat: string;
+  yThr, yCat: double;
 begin
   result := '';
   i := 0;
@@ -149,7 +163,9 @@ begin
     aSsCat := self.getSsInNextNumBeatsFor(aSsThr, 1);
     strThr := FloatToStr(aSsThr.thrPosCoord);
     strCat := FloatToStr(aSsCat.CatPosCoord);
-    result := result + Format('(%s)(%s).', [strThr, strCat]);
+    yThr := aSsThr.getThrYCoord;
+    yCat := aSsCat.getThrYCoord;
+    result := result + Format('(%s,%f)(%s,%f).', [strThr, yThr, strCat, yCat]);
     inc(i);
   end;
 end;
@@ -171,12 +187,13 @@ begin
   end;
 end;
 
-procedure TSQLGsPattern.init;
+procedure TSQLGsPattern.init(strSs: string);
 var
   aSs: TSQLGsSs;
   i: integer;
 begin
   Clear;
+  self.aSs := strSs;
   for i := 1 to lengthSs do
   begin
     aSs := TSQLGsSs.Create(self);
@@ -234,6 +251,20 @@ begin
   end;
 end;
 
+function TSQLGsPattern.delete(aDb: TSQLRestServerDB): boolean;
+var
+  i: integer;
+  oldSs: TSQLGsSs;
+begin
+  for i := 0 to listSs.Count-1 do
+  begin
+    oldSs := TSQLGsSs(listSs.Objects[i]);
+    aDb.delete(TSQLGsSs, oldSs.ID);
+  end;
+  aDb.Delete(TSQLGsPattern, ID);
+end;
+
+
 function TSQLGsPattern.loadAll(aDb: TSQLRestServerDB): boolean;
 begin
 
@@ -266,6 +297,11 @@ end;
 procedure TSQLGsPattern.SetlistSs(const Value: TRawUTF8List);
 begin
   FlistSs := Value;
+end;
+
+procedure TSQLGsPattern.Setname(const Value: RawUTF8);
+begin
+  Fname := Value;
 end;
 
 procedure TSQLGsPattern.SetValuesEditor(const Value: TValueListEditor);
@@ -316,6 +352,19 @@ begin
   aGsSs.thrModfier := 'inside';
   self.addSs(aGsSs);
 end;
+function TSQLGsPattern.update(aDb: TSQLRestServerDB): boolean;
+var
+  i: integer;
+  tmpSs: TSQLGsSs;
+begin
+  for i := 0 to listSs.Count-1 do
+  begin
+    tmpSs := TSQLGsSs(listSs.Objects[i]);
+    aDb.Update(tmpSs);
+  end;
+  aDb.Update(self);
+end;
+
 { TSs }
 
 procedure TSQLGsSs.assign(dest: TSQLGsSs);
@@ -344,6 +393,15 @@ end;
 function TSQLGsSs.getCatPosCoord: double;
 begin
   result := StrToFloat(parentPattern.ValuesEditor.Values[catPos]);
+  if thrHand <> thrPos then
+    result := -result;
+end;
+
+function TSQLGsSs.getCatXCoord: double;
+begin
+  result := StrToFloat(parentPattern.ValuesEditor.Values[catPos]);
+  if (catHand <> catPos)  and not (catPos <> 'c') then
+    result := -result;
 end;
 
 function TSQLGsSs.getNext: TSQLGsSs;
@@ -361,13 +419,29 @@ begin
   end;
 end;
 
-function TSQLGsSs.getThrPosCoord: double;
+function TSQLGsSs.getThrXCoord: double;
 begin
   result := StrToFloat(parentPattern.ValuesEditor.Values[thrPos]);
+  // inversion gauche / droite
+  if (thrHand <> thrPos) and not (thrPos <> 'c') then
+    result := -result;
+
+  // gestion osu
+
+  (*
+  //
   if thrModfier = 'inside' then
     result := result - 10
   else if thrModfier = 'outside' then
     result := result + 10;
+    *)
+end;
+
+function TSQLGsSs.getThrYCoord: double;
+begin
+  result := 0;
+  if osu <> '' then
+    result := StrToFloat(parentPattern.ValuesEditor.Values[osu]);
 end;
 
 procedure TSQLGsSs.SetcatHand(const Value: string);
@@ -393,6 +467,11 @@ end;
 procedure TSQLGsSs.Sethash(const Value: string);
 begin
   Fhash := Value;
+end;
+
+procedure TSQLGsSs.Setosu(const Value: string);
+begin
+  Fosu := Value;
 end;
 
 procedure TSQLGsSs.SetparentPattern(const Value: TSQLGsPattern);
