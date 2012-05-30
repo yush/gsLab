@@ -27,6 +27,8 @@ object Form1: TForm1
     ExplicitHeight = 584
     object TabSheet1: TTabSheet
       Caption = 'TabSheet1'
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 1111
       ExplicitHeight = 556
       object Panel1: TPanel
