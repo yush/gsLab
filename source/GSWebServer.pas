@@ -83,6 +83,11 @@ begin
     W.AddString('<html><head></head>');
     W.AddString('<body>');
     W.AddString('<applet archive="/jlab/JugglingLab.jar" code="JugglingLab" width="600" height="500">');
+    //
+    (*
+    W.AddString('<param name="config" value="entry=siteswap;view=simple">');
+    W.AddString('<param name="notation" value="siteswap">');
+      *)
     W.AddString('<param name="config" value="entry=none;view=edit">');
     W.AddString('<param name="notation" value="siteswap">');
     if params <> '' then
@@ -91,11 +96,6 @@ begin
       W.Add('<param name="pattern" value="%">',  [StringToUTF8(params)]);
     end;
 
-    (*
-    Enum := aDic.GetEnumerator;
-    while Enum.MoveNext do
-      W.Add('<param name="%" value="%">',  [StringToUTF8( Enum.Current.Key ), StringToUtf8(Enum.Current.Value)]);
-      *)
     W.AddString('Java not available');
     W.AddString('</applet>');
     W.AddString('</body>');

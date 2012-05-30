@@ -67,6 +67,7 @@ type
     Label3: TLabel;
     edtNom: TEdit;
     btnDelete: TButton;
+    btnView: TButton;
     procedure Button1Click(Sender: TObject);
     procedure btnProcessClick(Sender: TObject);
     procedure vstPatternGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -162,11 +163,20 @@ end;
 
 procedure TForm1.btnProcessClick(Sender: TObject);
 var
-  url: string;
+  urlBase, url, params: string;
 begin
-  url := generateUrl();
-  mmoResult.Text := aPattern.getHandsParams;
-  memoUrl.Text := url;
+  urlBase := 'http://localhost:888/jlab';
+  if Sender = btnProcess then
+  begin
+    params := generateUrl();
+    mmoResult.Text := params;
+    memoUrl.Text := urlBase+params;
+    url := urlBase+params;
+  end
+  else if Sender = btnView then
+  begin
+    url := urlBase+mmoResult.Text;
+  end;
   WebBrowser1.Stop;
   WebBrowser1.Navigate(url);
 end;
@@ -319,13 +329,12 @@ var
   params, paramsHands: string;
   url: string;
 begin
-  url := 'http://localhost:888/jlab';
   if TSQLGsSs(aPattern.listSs.Objects[0]).thrHand = 'l' then
     params := '?pattern=L' + aPattern.aSs
   else
     params := '?pattern=R' + aPattern.aSs;
   paramsHands := ';hands=' + aPattern.getHandsParams;
-  result := url + params + paramsHands;
+  result := params + paramsHands;
 end;
 
 procedure TForm1.vstPatternCreateEditor(Sender: TBaseVirtualTree;

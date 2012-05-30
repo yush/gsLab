@@ -2,8 +2,8 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 584
-  ClientWidth = 1119
+  ClientHeight = 660
+  ClientWidth = 1284
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,26 +18,29 @@ object Form1: TForm1
   object PageControl1: TPageControl
     Left = 0
     Top = 0
-    Width = 1119
-    Height = 584
+    Width = 1284
+    Height = 660
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 536
+    ExplicitWidth = 1119
+    ExplicitHeight = 584
     object TabSheet1: TTabSheet
       Caption = 'TabSheet1'
-      ExplicitHeight = 508
+      ExplicitWidth = 1111
+      ExplicitHeight = 556
       object Panel1: TPanel
         Left = 0
         Top = 0
         Width = 576
-        Height = 556
+        Height = 632
         Align = alLeft
         Caption = 'Panel1'
         Color = clMenu
         ParentBackground = False
         TabOrder = 0
-        ExplicitHeight = 508
+        ExplicitLeft = -6
+        ExplicitHeight = 556
         object Label2: TLabel
           Left = 208
           Top = 62
@@ -68,9 +71,9 @@ object Form1: TForm1
         end
         object vstPattern: TVirtualStringTree
           Left = 5
-          Top = 351
+          Top = 368
           Width = 548
-          Height = 194
+          Height = 177
           Header.AutoSizeIndex = -1
           Header.Font.Charset = DEFAULT_CHARSET
           Header.Font.Color = clWindowText
@@ -89,8 +92,8 @@ object Form1: TForm1
             end>
         end
         object btnProcess: TButton
-          Left = 334
-          Top = 185
+          Left = 333
+          Top = 200
           Width = 75
           Height = 25
           Caption = 'btnProcess'
@@ -116,8 +119,8 @@ object Form1: TForm1
             82)
         end
         object testCascadeInverse: TButton
-          Left = 320
-          Top = 242
+          Left = 209
+          Top = 171
           Width = 108
           Height = 25
           Caption = 'testCascadeInverse'
@@ -125,8 +128,8 @@ object Form1: TForm1
           OnClick = testTrick
         end
         object testHalfShower: TButton
-          Left = 434
-          Top = 242
+          Left = 209
+          Top = 200
           Width = 108
           Height = 25
           Caption = 'testHalfShower'
@@ -134,9 +137,9 @@ object Form1: TForm1
           OnClick = testTrick
         end
         object memoUrl: TMemo
-          Left = 206
-          Top = 273
-          Width = 347
+          Left = 209
+          Top = 296
+          Width = 344
           Height = 56
           Lines.Strings = (
             'mmoResult')
@@ -159,8 +162,8 @@ object Form1: TForm1
           Text = '1'
         end
         object testCascade: TButton
-          Left = 206
-          Top = 242
+          Left = 209
+          Top = 140
           Width = 108
           Height = 25
           Caption = 'testCascade'
@@ -168,8 +171,8 @@ object Form1: TForm1
           OnClick = testTrick
         end
         object Button1: TButton
-          Left = 209
-          Top = 185
+          Left = 333
+          Top = 140
           Width = 75
           Height = 25
           Caption = 'init grid'
@@ -178,9 +181,9 @@ object Form1: TForm1
         end
         object mmoResult: TMemo
           Left = 209
-          Top = 137
-          Width = 200
-          Height = 28
+          Top = 240
+          Width = 344
+          Height = 50
           Lines.Strings = (
             'mmoResult')
           TabOrder = 10
@@ -189,7 +192,7 @@ object Form1: TForm1
           Left = 1
           Top = 1
           Width = 192
-          Height = 296
+          Height = 312
           Columns = <
             item
               AutoSize = True
@@ -214,7 +217,7 @@ object Form1: TForm1
         end
         object btnLoad: TButton
           Left = 0
-          Top = 303
+          Top = 327
           Width = 43
           Height = 25
           Caption = 'Load'
@@ -223,7 +226,7 @@ object Form1: TForm1
         end
         object btnAdd: TButton
           Left = 49
-          Top = 303
+          Top = 327
           Width = 40
           Height = 25
           Caption = 'Add'
@@ -232,7 +235,7 @@ object Form1: TForm1
         end
         object btnSave: TButton
           Left = 112
-          Top = 303
+          Top = 327
           Width = 41
           Height = 25
           Caption = 'Save'
@@ -248,25 +251,34 @@ object Form1: TForm1
         end
         object btnDelete: TButton
           Left = 159
-          Top = 303
+          Top = 327
           Width = 41
           Height = 25
           Caption = 'Delete'
           TabOrder = 16
           OnClick = btnDeleteClick
         end
+        object btnView: TButton
+          Left = 334
+          Top = 171
+          Width = 75
+          Height = 25
+          Caption = 'view'
+          TabOrder = 17
+          OnClick = btnProcessClick
+        end
       end
       object WebBrowser1: TWebBrowser
         Left = 576
         Top = 0
-        Width = 535
-        Height = 556
+        Width = 700
+        Height = 632
         Align = alClient
         TabOrder = 1
         ExplicitWidth = 525
         ExplicitHeight = 506
         ControlData = {
-          4C0000004B370000773900000000000000000000000000000000000000000000
+          4C00000059480000524100000000000000000000000000000000000000000000
           000000004C000000000000000000000001000000E0D057007335CF11AE690800
           2B2E126209000000000000004C0000000114020000000000C000000000000046
           8000000000000000000000000000000000000000000000000000000000000000

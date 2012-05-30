@@ -39,6 +39,7 @@ type
     // figures testés
     procedure testCascade();
     procedure testCascadeInverse;
+    procedure testWindMill;
     procedure testHalfShower;
     function save(aDb: TSQLRestServerDB): boolean;
     function load(aDb: TSQLRestServerDB): boolean;
@@ -165,7 +166,7 @@ begin
     strCat := FloatToStr(aSsCat.CatPosCoord);
     yThr := aSsThr.getThrYCoord;
     yCat := aSsCat.getThrYCoord;
-    result := result + Format('(%s,%f)(%s,%f).', [strThr, yThr, strCat, yCat]);
+    result := result + Format('(%s,%.0f)(%s,%.0f).', [strThr, yThr, strCat, yCat]);
     inc(i);
   end;
 end;
@@ -352,6 +353,28 @@ begin
   aGsSs.thrModfier := 'inside';
   self.addSs(aGsSs);
 end;
+procedure TSQLGsPattern.testWindMill;
+var
+  aGsSs: TSQLGsSs;
+begin
+  clear;
+  aSs := '33';
+  aGsSs := TSQLGsSs.Create(self);
+  aGsSs.thrHand := 'l';
+  aGsSs.ssBase := 3;
+  aGsSs.thrPos := 'r';
+  aGsSs.catPos := 'c';
+  aGsSs.thrModfier := 'inside';
+  addSs(aGsSs);
+  aGsSs := TSQLGsSs.Create(self);
+  aGsSs.thrHand := 'r';
+  aGsSs.ssBase := 3;
+  aGsSs.thrPos := 'r';
+  aGsSs.catPos := 'c';
+  aGsSs.thrModfier := 'inside';
+  addSs(aGsSs);
+end;
+
 function TSQLGsPattern.update(aDb: TSQLRestServerDB): boolean;
 var
   i: integer;
@@ -423,7 +446,7 @@ function TSQLGsSs.getThrXCoord: double;
 begin
   result := StrToFloat(parentPattern.ValuesEditor.Values[thrPos]);
   // inversion gauche / droite
-  if (thrHand <> thrPos) and not (thrPos <> 'c') then
+  if (thrHand <> thrPos) and not (thrPos = 'c') then
     result := -result;
 
   // gestion osu
